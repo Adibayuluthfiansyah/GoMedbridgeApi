@@ -7,6 +7,6 @@ CREATE TABLE users (
     role VARCHAR (20) NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMP NOT NULL DEFAULT NOW()  
-)
+);
 
 CREATE INDEX idx_users_email ON users(email);
