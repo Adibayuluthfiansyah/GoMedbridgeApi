@@ -6,10 +6,10 @@ import (
 )
 
 type JSONResponse struct {
-	Status  string      `json: "status"`
-	Message string      `json: "message,omitempty"`
-	Data    interface{} `json: "data,omitempty"`
-	Error   interface{} `json: "error,omitempty"`
+	Status  string      `json:"status"`
+	Message string      `json:"message,omitempty"`
+	Data    interface{} `json:"data,omitempty"`
+	Error   interface{} `json:"error,omitempty"`
 }
 
 func WriteJSON(w http.ResponseWriter, statusCode int, payload JSONResponse) {

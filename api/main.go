@@ -4,27 +4,27 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/Adibayuluthfiansyah/GoMedbridgeApi/pkg/response"
+	"github.com/Adibayuluthfiansyah/GoMedbridgeApi/internal/infrastructure/config"
+	"github.com/Adibayuluthfiansyah/GoMedbridgeApi/internal/infrastructure/database"
 )
 
 func main() {
-	mux := http.NewServeMux()
+	cfg := config.Load()
 
-	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
-		response.WriteJSON(w, http.StatusOK, response.JSONResponse{
-			Status:  "succes",
-			Message: "service healthy",
-		})
-	})
-
-	server := &http.Server{
-		Addr:    ":8080",
-		Handler: mux,
-	}
-
-	log.Println("Server running on :8080")
-	err := server.ListenAndServe()
+	db, err := database.NewPostgres(cfg)
 	if err != nil {
 		log.Fatal(err)
 	}
+	defer db.Close()
+
+	database.RunMigrations(db)
+
+	mux := http.NewServeMux()
+
+	server := &http.Server{
+		Addr:    ":" + cfg.AppPort,
+		Handler: mux,
+	}
+	log.Println("Server running on :" + cfg.AppPort)
+	log.Fatal(server.ListenAndServe())
 }
