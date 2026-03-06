@@ -24,8 +24,28 @@ type UserRegisterRequest struct {
 type UserRepository interface {
 	Create(ctx context.Context, user *User) error
 	GetByEmail(ctx context.Context, email string) (*User, error)
+	GetByID(ctx context.Context, id string) (*User, error)
+	Update(ctx context.Context, user *User) error
+	GetDoctors(ctx context.Context) ([]User, error)
 }
 
 type UserUseCase interface {
 	Register(ctx context.Context, req UserRegisterRequest) error
+	Login(ctx context.Context, req UserLoginRequest) (UserLoginResponse, error)
+	UpdateProfile(ctx context.Context, userID string, req UserUpdateRequest) error
+	GetByID(ctx context.Context, id string) (*User, error)
+	GetDoctors(ctx context.Context) ([]User, error)
+}
+
+type UserLoginRequest struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+type UserLoginResponse struct {
+	Token string `json:"token"`
+}
+
+type UserUpdateRequest struct {
+	Name string `json:"name"`
 }
