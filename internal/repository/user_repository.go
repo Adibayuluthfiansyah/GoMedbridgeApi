@@ -48,9 +48,9 @@ func (r *postgresUserRepository) GetByEmail(ctx context.Context, email string) (
 }
 
 // get by id
-func (r *postgresUserRepository) GetByID(ctx context.Context, email string) (*domain.User, error) {
+func (r *postgresUserRepository) GetByID(ctx context.Context, id string) (*domain.User, error) {
 	query := `SELECT id, name, email, password_hash, role, created_at, updated_at FROM users WHERE id = $1;`
-	row := r.db.QueryRowContext(ctx, query, email)
+	row := r.db.QueryRowContext(ctx, query, id)
 	var user domain.User
 	err := row.Scan(
 		&user.ID,
@@ -96,6 +96,9 @@ func (r *postgresUserRepository) GetDoctors(ctx context.Context) ([]domain.User,
 			return nil, err
 		}
 		doctors = append(doctors, doctor)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	return doctors, nil
 }

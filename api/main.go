@@ -30,23 +30,38 @@ func main() {
 
 	mux := http.NewServeMux()
 
+	// repo
 	userRepo := repository.NewPostgresUserRepository(db)
+	appointmentRepo := repository.NewPostgresAppointmentRepository(db)
 
 	jwtSecret := cfg.JWTSecret
 
+	// usecase
 	userUsecase := usecase.NewUserUsecase(userRepo, jwtSecret)
+	appointmentUseCase := usecase.NewAppointmentUsecase(appointmentRepo)
+
+	// handler
 	userHandler := handler.NewUserHandler(userUsecase)
+	appointmentHandler := handler.NewAppointmentHandler(appointmentUseCase)
 
+	// private route endpoints
 	updateProfileEndpoint := http.HandlerFunc(userHandler.UpdateProfile)
-
 	profileEndpoint := http.HandlerFunc(userHandler.GetProfile)
+	appointmendEndpoint := http.HandlerFunc(appointmentHandler.CreateAppointment)
+	updateAppointmentStatusEndpoint := http.HandlerFunc(appointmentHandler.UpdateStatus)
+	getAppointmentEndpoint := http.HandlerFunc(appointmentHandler.GetAppointmentsByID)
 
-	//route
+	//route public
 	mux.HandleFunc("POST /login", userHandler.Login)
 	mux.HandleFunc("POST /register", userHandler.Register)
+	mux.HandleFunc("GET /doctors", userHandler.GetDoctors)
+
+	//route private
 	mux.Handle("PUT /profile", middleware.Auth(jwtSecret)(updateProfileEndpoint))
 	mux.Handle("GET /profile", middleware.Auth(jwtSecret)(profileEndpoint))
-	mux.HandleFunc("GET /doctors", userHandler.GetDoctors)
+	mux.Handle("POST /appointments", middleware.Auth(jwtSecret)(appointmendEndpoint))
+	mux.Handle("PUT /appointments/{id}/status", middleware.Auth(jwtSecret)(updateAppointmentStatusEndpoint))
+	mux.Handle("GET /appointments/{id}", middleware.Auth(jwtSecret)(getAppointmentEndpoint))
 
 	server := &http.Server{
 		Addr:    ":" + cfg.AppPort,

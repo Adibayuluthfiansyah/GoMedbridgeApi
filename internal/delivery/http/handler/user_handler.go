@@ -81,7 +81,14 @@ func (h *UserHandler) GetProfile(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	}
-	userIDStr := userID.(string)
+	userIDStr, ok := userID.(string)
+	if !ok {
+		response.WriteJSON(w, http.StatusUnauthorized, response.JSONResponse{
+			Status:  "error",
+			Message: "Unauthorized from handler",
+		})
+		return
+	}
 
 	user, err := h.usecase.GetByID(r.Context(), userIDStr)
 	if err != nil {
@@ -89,8 +96,8 @@ func (h *UserHandler) GetProfile(w http.ResponseWriter, r *http.Request) {
 			Status:  "error",
 			Message: err.Error(),
 		})
+		return
 	}
-
 	response.WriteJSON(w, http.StatusOK, response.JSONResponse{
 		Status:  "success",
 		Message: "Welcome to your profile!",
@@ -108,7 +115,15 @@ func (h *UserHandler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	}
-	userIDStr := userID.(string)
+	userIDStr, ok := userID.(string)
+	if !ok {
+		response.WriteJSON(w, http.StatusUnauthorized, response.JSONResponse{
+			Status:  "error",
+			Message: "Unauthorized",
+		})
+		return
+	}
+
 	var req domain.UserUpdateRequest
 	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
@@ -147,5 +162,4 @@ func (h *UserHandler) GetDoctors(w http.ResponseWriter, r *http.Request) {
 		Message: "List of doctors retrieved successfully",
 		Data:    doctors,
 	})
-
 }

@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -25,18 +26,20 @@ func Auth(jwtSecret string) func(http.Handler) http.Handler {
 				})
 				return
 			}
-			parts := strings.Split(authHeader, " ")
+			//parts := strings.Split(authHeader, " ")
+			parts := strings.Fields(authHeader)
 			if len(parts) != 2 || parts[0] != "Bearer" {
 				response.WriteJSON(w, http.StatusUnauthorized, response.JSONResponse{
 					Status:  "error",
-					Message: "Invalid Authorized Header",
+					Message: "Invalid Authorization header. Expected: 'Authorization: Bearer <token>'",
 				})
 				return
 			}
 			tokenString := parts[1]
 			token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 				if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-					return nil, http.ErrAbortHandler
+					// return nil, http.ErrAbortHandler
+					return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 				}
 				return []byte(jwtSecret), nil
 			})
@@ -56,7 +59,21 @@ func Auth(jwtSecret string) func(http.Handler) http.Handler {
 				return
 			}
 			userID := claims["userID"].(string)
+			if !ok {
+				response.WriteJSON(w, http.StatusUnauthorized, response.JSONResponse{
+					Status:  "error",
+					Message: "Invalid token claim: userID",
+				})
+				return
+			}
 			userRole := claims["role"].(string)
+			if !ok {
+				response.WriteJSON(w, http.StatusUnauthorized, response.JSONResponse{
+					Status:  "error",
+					Message: "Invalid token claim: userRole",
+				})
+				return
+			}
 
 			ctx := context.WithValue(r.Context(), UserIDKey, userID)
 			ctx = context.WithValue(ctx, UserRoleKey, userRole)
