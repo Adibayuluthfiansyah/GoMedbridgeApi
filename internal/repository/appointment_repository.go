@@ -20,8 +20,8 @@ func NewPostgresAppointmentRepository(db *sql.DB) domain.AppointmentRepository {
 
 // create appointment
 func (r *postgresAppointmentRepository) Create(ctx context.Context, appointment *domain.Appointment) error {
-	query := `INSERT INTO appointments (patient_id, doctor_id, appointment_date, status) VALUES ($1, $2, $3, $4) RETURNING id;`
-	err := r.db.QueryRowContext(ctx, query, appointment.PatientID, appointment.DoctorID, appointment.AppointmentDate, appointment.Status).Scan(&appointment.ID)
+	query := `INSERT INTO appointments (patient_id, doctor_id, appointment_date, status) VALUES ($1, $2, $3, $4) RETURNING id, created_at, updated_at;`
+	err := r.db.QueryRowContext(ctx, query, appointment.PatientID, appointment.DoctorID, appointment.AppointmentDate, appointment.Status).Scan(&appointment.ID, &appointment.CreatedAt, &appointment.UpdatedAt)
 	return err
 }
 
@@ -34,7 +34,7 @@ func (r *postgresAppointmentRepository) UpdateStatus(ctx context.Context, id str
 
 // get by id
 func (r *postgresAppointmentRepository) GetByID(ctx context.Context, id string) (*domain.Appointment, error) {
-	query := `SELECT id, patient_id, doctor_id, appointment_date, status, created_at, updated_at FROM appointments WHERE id = $1;`
+	query := `SELECT id, patient_id, doctor_id, appointment_date, status, created_at, updated_at FROM appointments WHERE id = $1 ORDER BY appointment_date DESC ;`
 	row := r.db.QueryRowContext(ctx, query, id)
 	var appointment domain.Appointment
 	err := row.Scan(
@@ -57,7 +57,7 @@ func (r *postgresAppointmentRepository) GetByID(ctx context.Context, id string) 
 
 // get patient appointment
 func (r *postgresAppointmentRepository) GetPatientID(ctx context.Context, patientID string) ([]domain.Appointment, error) {
-	query := `SELECT id, patient_id, doctor_id, appointment_date, status, created_at, updated_at FROM appointments WHERE patiend_ID = $1 ORDER BY appointment_date DESC;`
+	query := `SELECT id, patient_id, doctor_id, appointment_date, status, created_at, updated_at FROM appointments WHERE patient_ID = $1 ORDER BY appointment_date DESC;`
 	rows, err := r.db.QueryContext(ctx, query, patientID)
 	if err != nil {
 		return nil, err
