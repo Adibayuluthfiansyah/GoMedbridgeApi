@@ -34,6 +34,7 @@ func main() {
 	userRepo := repository.NewPostgresUserRepository(db)
 	appointmentRepo := repository.NewPostgresAppointmentRepository(db)
 	prescriptionRepo := repository.NewPostgresPrescriptionRepository(db)
+	paymentRepo := repository.NewPostgresPaymentRepository(db)
 
 	jwtSecret := cfg.JWTSecret
 
@@ -41,11 +42,13 @@ func main() {
 	userUsecase := usecase.NewUserUsecase(userRepo, jwtSecret)
 	appointmentUseCase := usecase.NewAppointmentUsecase(appointmentRepo)
 	prescriptionUsecase := usecase.NewPrescriptionUsecase(prescriptionRepo, appointmentRepo)
+	paymentUsecase := usecase.NewPaymentUsecase(paymentRepo, appointmentRepo)
 
 	// handler
 	userHandler := handler.NewUserHandler(userUsecase)
 	appointmentHandler := handler.NewAppointmentHandler(appointmentUseCase)
 	prescriptionHandler := handler.NewPrescriptionHandler(prescriptionUsecase)
+	paymentHandler := handler.NewPaymentHandler(paymentUsecase)
 
 	// private route endpoints
 	updateProfileEndpoint := http.HandlerFunc(userHandler.UpdateProfile)
@@ -57,11 +60,13 @@ func main() {
 	getDoctorAppointmentEndpoint := http.HandlerFunc(appointmentHandler.GetDoctorAppointments)
 	createPrescriptionEndpoint := http.HandlerFunc(prescriptionHandler.CreatePrescription)
 	getPatientPrescriptionEndpoint := http.HandlerFunc(prescriptionHandler.GetPatientPrescription)
+	createPaymentEndpoint := http.HandlerFunc(paymentHandler.CreatePayment)
 
 	//route public
 	mux.HandleFunc("POST /login", userHandler.Login)
 	mux.HandleFunc("POST /register", userHandler.Register)
 	mux.HandleFunc("GET /doctors", userHandler.GetDoctors)
+	mux.HandleFunc("POST /payments/webhook", paymentHandler.HandleWebhook)
 
 	//route private
 	mux.Handle("PUT /profile", middleware.Auth(jwtSecret)(updateProfileEndpoint))
@@ -73,6 +78,7 @@ func main() {
 	mux.Handle("GET /appointments/doctor", middleware.Auth(jwtSecret)(getDoctorAppointmentEndpoint))
 	mux.Handle("POST /prescriptions", middleware.Auth(jwtSecret)(createPrescriptionEndpoint))
 	mux.Handle("GET /prescriptions", middleware.Auth(jwtSecret)(getPatientPrescriptionEndpoint))
+	mux.Handle("POST /payments", middleware.Auth(jwtSecret)(createPaymentEndpoint))
 
 	server := &http.Server{
 		Addr:    ":" + cfg.AppPort,
