@@ -33,16 +33,19 @@ func main() {
 	// repo
 	userRepo := repository.NewPostgresUserRepository(db)
 	appointmentRepo := repository.NewPostgresAppointmentRepository(db)
+	prescriptionRepo := repository.NewPostgresPrescriptionRepository(db)
 
 	jwtSecret := cfg.JWTSecret
 
 	// usecase
 	userUsecase := usecase.NewUserUsecase(userRepo, jwtSecret)
 	appointmentUseCase := usecase.NewAppointmentUsecase(appointmentRepo)
+	prescriptionUsecase := usecase.NewPrescriptionUsecase(prescriptionRepo, appointmentRepo)
 
 	// handler
 	userHandler := handler.NewUserHandler(userUsecase)
 	appointmentHandler := handler.NewAppointmentHandler(appointmentUseCase)
+	prescriptionHandler := handler.NewPrescriptionHandler(prescriptionUsecase)
 
 	// private route endpoints
 	updateProfileEndpoint := http.HandlerFunc(userHandler.UpdateProfile)
@@ -52,6 +55,8 @@ func main() {
 	getAppointmentEndpoint := http.HandlerFunc(appointmentHandler.GetAppointmentsByID)
 	getPatientAppointmentEndpoint := http.HandlerFunc(appointmentHandler.GetPatientAppointment)
 	getDoctorAppointmentEndpoint := http.HandlerFunc(appointmentHandler.GetDoctorAppointments)
+	createPrescriptionEndpoint := http.HandlerFunc(prescriptionHandler.CreatePrescription)
+	getPatientPrescriptionEndpoint := http.HandlerFunc(prescriptionHandler.GetPatientPrescription)
 
 	//route public
 	mux.HandleFunc("POST /login", userHandler.Login)
@@ -66,6 +71,8 @@ func main() {
 	mux.Handle("GET /appointments/{id}", middleware.Auth(jwtSecret)(getAppointmentEndpoint))
 	mux.Handle("GET /appointments", middleware.Auth(jwtSecret)(getPatientAppointmentEndpoint))
 	mux.Handle("GET /appointments/doctor", middleware.Auth(jwtSecret)(getDoctorAppointmentEndpoint))
+	mux.Handle("POST /prescriptions", middleware.Auth(jwtSecret)(createPrescriptionEndpoint))
+	mux.Handle("GET /prescriptions", middleware.Auth(jwtSecret)(getPatientPrescriptionEndpoint))
 
 	server := &http.Server{
 		Addr:    ":" + cfg.AppPort,
