@@ -29,6 +29,7 @@ type AppointmentRepository interface {
 	GetByID(ctx context.Context, id string) (*Appointment, error)
 	UpdateStatus(ctx context.Context, id string, req AppointmentUpdateStatusRequest) error
 	GetPatientID(ctx context.Context, patientID string) ([]Appointment, error)
+	GetDoctorByID(ctx context.Context, doctorID string) ([]Appointment, error)
 }
 
 type AppointmentUseCase interface {
@@ -36,4 +37,5 @@ type AppointmentUseCase interface {
 	UpdateAppointmentStatus(ctx context.Context, doctorID string, appointmentID string, req AppointmentUpdateStatusRequest) error
 	GetByID(ctx context.Context, id string) (*Appointment, error)
 	GetPatientAppointments(ctx context.Context, patientID string) ([]Appointment, error)
+	GetDoctorAppointments(ctx context.Context, doctorID string) ([]Appointment, error)
 }

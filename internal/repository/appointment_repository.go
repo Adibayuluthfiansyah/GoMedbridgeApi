@@ -85,3 +85,34 @@ func (r *postgresAppointmentRepository) GetPatientID(ctx context.Context, patien
 	}
 	return appointments, nil
 }
+
+// get doctor appointment
+func (r *postgresAppointmentRepository) GetDoctorByID(ctx context.Context, doctorID string) ([]domain.Appointment, error) {
+	query := `SELECT id, patient_id, doctor_id, appointment_date, status, created_at, updated_at FROM appointments WHERE doctor_id = $1 ORDER BY appointment_date ASC;`
+	rows, err := r.db.QueryContext(ctx, query, doctorID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var appointments []domain.Appointment
+	for rows.Next() {
+		var app domain.Appointment
+		err := rows.Scan(
+			&app.ID,
+			&app.PatientID,
+			&app.DoctorID,
+			&app.AppointmentDate,
+			&app.Status,
+			&app.CreatedAt,
+			&app.UpdatedAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+		appointments = append(appointments, app)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return appointments, nil
+}

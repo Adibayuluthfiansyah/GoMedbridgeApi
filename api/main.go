@@ -51,6 +51,7 @@ func main() {
 	updateAppointmentStatusEndpoint := http.HandlerFunc(appointmentHandler.UpdateStatus)
 	getAppointmentEndpoint := http.HandlerFunc(appointmentHandler.GetAppointmentsByID)
 	getPatientAppointmentEndpoint := http.HandlerFunc(appointmentHandler.GetPatientAppointment)
+	getDoctorAppointmentEndpoint := http.HandlerFunc(appointmentHandler.GetDoctorAppointments)
 
 	//route public
 	mux.HandleFunc("POST /login", userHandler.Login)
@@ -64,6 +65,7 @@ func main() {
 	mux.Handle("PUT /appointments/{id}/status", middleware.Auth(jwtSecret)(updateAppointmentStatusEndpoint))
 	mux.Handle("GET /appointments/{id}", middleware.Auth(jwtSecret)(getAppointmentEndpoint))
 	mux.Handle("GET /appointments", middleware.Auth(jwtSecret)(getPatientAppointmentEndpoint))
+	mux.Handle("GET /appointments/doctor", middleware.Auth(jwtSecret)(getDoctorAppointmentEndpoint))
 
 	server := &http.Server{
 		Addr:    ":" + cfg.AppPort,

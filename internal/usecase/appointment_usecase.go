@@ -82,3 +82,15 @@ func (u *appointmentUseCase) GetPatientAppointments(ctx context.Context, patient
 	}
 	return appointment, nil
 }
+
+// get doctor appointment
+func (u *appointmentUseCase) GetDoctorAppointments(ctx context.Context, doctorID string) ([]domain.Appointment, error) {
+	appointment, err := u.repo.GetDoctorByID(ctx, doctorID)
+	if err != nil {
+		return nil, err
+	}
+	if appointment == nil {
+		return []domain.Appointment{}, nil
+	}
+	return appointment, nil
+}

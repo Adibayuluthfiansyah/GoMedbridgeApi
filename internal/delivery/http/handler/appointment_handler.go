@@ -162,3 +162,36 @@ func (h *AppointmentHandler) GetPatientAppointment(w http.ResponseWriter, r *htt
 		Data:    appointments,
 	})
 }
+
+// get doctor appointment
+func (h *AppointmentHandler) GetDoctorAppointments(w http.ResponseWriter, r *http.Request) {
+	userID := r.Context().Value(middleware.UserIDKey)
+	if userID == nil {
+		response.WriteJSON(w, http.StatusUnauthorized, response.JSONResponse{
+			Status:  "error",
+			Message: "Unauthorized invalid Doctor id not found",
+		})
+		return
+	}
+	doctorIDStr, ok := userID.(string)
+	if !ok {
+		response.WriteJSON(w, http.StatusBadRequest, response.JSONResponse{
+			Status:  "eror",
+			Message: "Unthorized invalid doctor id format",
+		})
+		return
+	}
+	appointments, err := h.usecase.GetDoctorAppointments(r.Context(), doctorIDStr)
+	if err != nil {
+		response.WriteJSON(w, http.StatusInternalServerError, response.JSONResponse{
+			Status:  "error",
+			Message: err.Error(),
+		})
+		return
+	}
+	response.WriteJSON(w, http.StatusOK, response.JSONResponse{
+		Status:  "success",
+		Message: "Appointments retrieved successfully",
+		Data:    appointments,
+	})
+}
